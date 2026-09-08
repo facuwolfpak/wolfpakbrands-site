@@ -151,7 +151,7 @@ const BRAND = "Hardpops";
 const BRAND_KEY = "hardpops";
 const MINIMUM = "1 pallet, in complete layers";
 const MIN_PALLETS = 1;
-const PRODUCTS = [{"id":"hp860006438487","mpn":"860006438487","section":"","name":"Hardpops Original Cocktail Ice Pops, Tropical Cocktail Pack","size":"8 pop pouch (8 x 62.5 mL, 500 mL), 6.9% alc/vol","upc":"860006438487","pack":12,"price":95.45,"perPallet":60,"moq":1,"badge":"21+","desc":"Mango Margarita x3, Strawberry Margarita x3, Piña Colada x2. Freeze and enjoy. Case GTIN 10860006438484, 14 lb gross case. 1 layer = 10 cases, 6 layers per pallet, 10 pallets per 20 ft container. Lead time about 10 weeks for a first order.","photo":"","sale":83.0,"ti":10,"hi":6,"caseKg":6.35}];
+const PRODUCTS = [{"id":"hp860006438487","mpn":"860006438487","section":"","name":"Hardpops Original Cocktail Ice Pops, Tropical Cocktail Pack","size":"8 pop pouch (8 x 62.5 mL, 500 mL), 6.9% alc/vol","upc":"860006438487","pack":12,"price":95.45,"perPallet":60,"moq":60,"badge":"21+","desc":"Mango Margarita x3, Strawberry Margarita x3, Piña Colada x2. Freeze and enjoy. Case GTIN 10860006438484, 14 lb gross case. Minimum order 1 full pallet = 6 layers of 10 cases (60 cases), 10 pallets per 20 ft container. Lead time about 10 weeks for a first order.","photo":"","sale":83.0,"ti":10,"hi":6,"caseKg":6.35}];
 if (window.PB_PHOTOS) PRODUCTS.forEach(p => { if (PB_PHOTOS[p.id]) p.photo = PB_PHOTOS[p.id]; });
 const $ = s => document.querySelector(s);
 const money = n => "$" + n.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2});
