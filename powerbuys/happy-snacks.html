@@ -72,6 +72,11 @@ input:focus,textarea:focus{outline:none;border-color:var(--red)}
 .foot a{color:inherit}
 @media (max-width:420px){.row{grid-template-columns:130px 1fr}}
 
+.fulfil{margin:20px 0 -6px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;margin-top:8px}
+.seg button{border:0;background:transparent;color:var(--ink);font-family:"Archivo";font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;padding:12px 8px;cursor:pointer}
+.seg button.on{background:var(--red);color:#fff}
+.fnote{font-size:14px;color:var(--mute);margin-top:6px}
 .callouts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
 .callouts span{border:1.5px solid var(--ink);border-radius:999px;padding:5px 12px;font-family:"Archivo";font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
 .item .th{cursor:zoom-in}
@@ -123,6 +128,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--red)}
   <div class="eyebrow" style="margin-bottom:8px">Sell sheets</div>
   <div class="sheets"><a class="btn" href="/powerbuys/docs/HAPPY%20SNACKS.pdf" target="_blank" rel="noopener">⬇ Happy Snacks presentation (PDF)</a></div>
 
+<div class="fulfil" id="fulfil"><div class="eyebrow">How will you receive it?</div><div class="seg"><button type="button" data-mode="pickup" class="on">Pick up · Park City, IL</button><button type="button" data-mode="delivered">Delivered · freight included</button></div><div class="fnote" id="fnote"></div></div>
   <div class="list" id="list"></div>
 
   <div class="form" style="margin-top:24px">
@@ -150,11 +156,18 @@ if (window.PB_PHOTOS) PRODUCTS.forEach(p => { if (PB_PHOTOS[p.id]) p.photo = PB_
 const $ = s => document.querySelector(s);
 const money = n => "$" + n.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2});
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const show = p => p.sale != null ? p.sale : Math.round(p.price * (1 - DISCOUNT) * 100) / 100;
+const DELIVERED = "Delivered by Happy Snacks (freight included)";
+const MODE_KEY = "wpfulfil_" + BRAND_KEY;
+let MODE = "pickup"; try { if (DELIVERED && localStorage.getItem(MODE_KEY) === "delivered") MODE = "delivered"; } catch(e){}
+const delivered = () => MODE === "delivered";
+const listOf = p => (delivered() && p.delPrice != null) ? p.delPrice : p.price;
+const show = p => (delivered() && p.delSale != null) ? p.delSale : (p.sale != null ? p.sale : Math.round(p.price * (1 - DISCOUNT) * 100) / 100);
+const termLabel = () => delivered() ? DELIVERED : INCOTERM;
 const stepOf = p => p.ti || 1;
 const qtyOf = p => Math.max(0, parseInt($("#q-" + p.id).value) || 0);
 const palletH = p => (p.hi && p.caseIn) ? Math.round(p.hi * p.caseIn[2] + 5.5) : 0;
 
+function renderList(){
 let lastSection = null;
 $("#list").innerHTML = PRODUCTS.map(p => (p.section && p.section !== lastSection ? ((lastSection = p.section), `<h2 class="section">${esc(p.section)}</h2>`) : "") + `
   <div class="item" id="${p.id}">
@@ -163,8 +176,8 @@ $("#list").innerHTML = PRODUCTS.map(p => (p.section && p.section !== lastSection
       <h3>${esc(p.name)}${p.badge ? `<span class="tag">${esc(p.badge)}</span>` : ""}</h3>
       <div class="m">${esc(p.size)} · ${p.pack} per case${p.heat ? " · " + esc(p.heat) : ""}${p.msrp ? " · SRP " + money(p.msrp) : ""}${p.mpn ? " · " + esc(p.mpn) : ""}${p.upc ? " · UPC " + esc(p.upc) : ""}</div>
       ${p.desc ? `<div class="desc">${esc(p.desc)}</div>` : `<div style="height:6px"></div>`}
-      <div class="pr"><span class="was">List ${money(p.price)}</span><span class="now">${money(show(p))} <small>/ case</small></span><span class="unit">${money(show(p)/p.pack)} per unit</span></div>
-      ${p.delSale != null ? `<div class="pallet" style="margin-top:4px"><b style="color:var(--ink)">Delivered option: ${money(p.delSale)}/case</b> (list ${money(p.delPrice)})</div>` : ""}
+      <div class="pr"><span class="was">List ${money(listOf(p))}</span><span class="now">${money(show(p))} <small>/ case${delivered() ? " delivered" : ""}</small></span><span class="unit">${money(show(p)/p.pack)} per unit</span></div>
+      ${p.delSale != null ? `<div class="pallet" style="margin-top:4px">${delivered() ? `Pick up price: ${money(p.sale != null ? p.sale : p.price)}/case` : `Delivered price: ${money(p.delSale)}/case`}</div>` : ""}
       ${p.ti ? `<div class="pallet">Ordered by full layer: 1 layer = ${p.ti} cases · ${p.hi} layers per pallet (${p.perPallet} cases)${p.caseKg ? ` · ${p.caseKg} kg per case` : ""}${p.moq > 1 ? ` · min ${p.moq} cases` : ""}</div>` : (p.perPallet ? `<div class="pallet">${p.perPallet} cases per pallet${p.moq > 1 ? ` · min ${p.moq} cases` : ""}</div>` : "")}
       <div class="row">
         <div class="qty">
@@ -176,6 +189,8 @@ $("#list").innerHTML = PRODUCTS.map(p => (p.section && p.section !== lastSection
       </div>
     </div>
   </div>`).join("");
+bindQty();
+}
 
 function recalc(){
   let cases = 0, units = 0, total = 0, pallets = 0, layers = 0, kg = 0, tallest = 0, rows = [], lines = [];
@@ -191,7 +206,7 @@ function recalc(){
   const pal = pallets ? ` · ${layers ? layers + " layers · " : ""}${pallets.toFixed(2)} pallets (${positions} pallet position${positions===1?"":"s"})${kg ? " · " + Math.round(kg) + " kg" : ""}` : "";
   const under = pallets > 0 && pallets < MIN_PALLETS - 1e-9;
   $("#sum").innerHTML = rows.length
-    ? `<table>${rows.join("")}<tr class="tot"><td>Estimated total<br><span class="empty" style="font:15px 'Source Sans 3',sans-serif;font-weight:400">${cases} cases · ${units} units${pal} · ${esc(INCOTERM)}</span></td><td>${money(total)}</td></tr></table>` + (under ? `<div class="warn">Minimum for this brand is ${MIN_PALLETS} pallet${MIN_PALLETS===1?"":"s"} (${esc(MINIMUM)}). Add layers to reach it.</div>` : "")
+    ? `<table>${rows.join("")}<tr class="tot"><td>Estimated total<br><span class="empty" style="font:15px 'Source Sans 3',sans-serif;font-weight:400">${cases} cases · ${units} units${pal} · ${esc(termLabel())}</span></td><td>${money(total)}</td></tr></table>` + (under ? `<div class="warn">Minimum for this brand is ${MIN_PALLETS} pallet${MIN_PALLETS===1?"":"s"} (${esc(MINIMUM)}). Add layers to reach it.</div>` : "")
     : `<div class="empty">No items yet. Add cases above and they appear here.</div>`;
   saveCart(cases, units, total, pallets, {layers, kg, positions, tallest});
   const bar = $("#cartbar");
@@ -204,11 +219,12 @@ function cartTotals(){ const c = loadCart(); let cases=0,total=0,brands=0; for (
 function saveCart(cases, units, total, pallets, x){
   let c = loadCart();
   const lines = PRODUCTS.filter(p => qtyOf(p) > 0).map(p => ({id:p.id, name:p.name, section:p.section||"", size:p.size, pack:p.pack, mpn:p.mpn||"", upc:p.upc||"", price:p.price, show:show(p), qty:qtyOf(p), perPallet:p.perPallet||0, ti:p.ti||0, kg:p.caseKg||0}));
-  if (lines.length) c[BRAND_KEY] = {name:BRAND, path:location.pathname, incoterm:INCOTERM, discount:DISCOUNT, minimum:MINIMUM, minPallets:MIN_PALLETS, cases, units, total, pallets, layers:x.layers, kg:x.kg, positions:x.positions, tallest:x.tallest, lines, at:Date.now()};
+  if (lines.length) c[BRAND_KEY] = {name:BRAND, path:location.pathname, incoterm:termLabel(), fulfillment:MODE, discount:DISCOUNT, minimum:MINIMUM, minPallets:MIN_PALLETS, cases, units, total, pallets, layers:x.layers, kg:x.kg, positions:x.positions, tallest:x.tallest, lines, at:Date.now()};
   else delete c[BRAND_KEY];
   try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){}
 }
-(function restore(){ const c = loadCart()[BRAND_KEY]; if (!c) return; for (const l of c.lines){ const i = $("#q-" + l.id); if (i) i.value = l.qty; } })();
+function restore(){ const c = loadCart()[BRAND_KEY]; if (!c) return; for (const l of c.lines){ const i = $("#q-" + l.id); if (i) i.value = l.qty; } }
+function bindQty(){
 document.querySelectorAll(".qty button").forEach(b => b.addEventListener("click", () => {
   const p = PRODUCTS.find(x => x.id === b.dataset.id), st = stepOf(p), i = $("#q-" + p.id);
   let v = Math.max(0, (parseInt(i.value)||0) + parseInt(b.dataset.d) * st); const mn = p.moq > 1 ? Math.ceil(p.moq / st) * st : 0; if (v > 0 && v < mn) v = parseInt(b.dataset.d) > 0 ? mn : 0; i.value = v; recalc();
@@ -217,14 +233,23 @@ document.querySelectorAll(".qty input").forEach(i => {
   i.addEventListener("input", recalc);
   i.addEventListener("change", () => { const p = PRODUCTS.find(x => "q-" + x.id === i.id), st = stepOf(p); const v = Math.max(0, parseInt(i.value)||0); let nv = (st > 1 && v % st) ? Math.ceil(v / st) * st : v; const mn = p.moq > 1 ? Math.ceil(p.moq / st) * st : 0; if (nv > 0 && nv < mn) nv = mn; i.value = nv; recalc(); });
 });
+document.querySelectorAll(".th[data-lb]").forEach(t => t.addEventListener("click", () => { const p = PRODUCTS.find(x => x.id === t.dataset.lb); if (p) openLB(p); }));
+}
+function setMode(m){
+  MODE = m; try { localStorage.setItem(MODE_KEY, m); } catch(e){}
+  document.querySelectorAll("#fulfil .seg button").forEach(b => b.classList.toggle("on", b.dataset.mode === m));
+  const n = $("#fnote"); if (n) n.textContent = m === "delivered" ? "Delivered prices include freight to your consolidator or forwarder in the US; confirm the delivery address in the notes when you send the order." : "Pick up prices: your carrier collects at the brand's warehouse.";
+  const q = {}; PRODUCTS.forEach(p => q[p.id] = qtyOf(p)); renderList(); PRODUCTS.forEach(p => $("#q-" + p.id).value = q[p.id] || 0); recalc();
+}
+document.querySelectorAll("#fulfil .seg button").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
 document.body.insertAdjacentHTML("beforeend", `<div class="lb" id="lb" role="dialog" aria-label="Product photo"><button class="x" aria-label="Close">×</button><img alt=""><div class="cap"></div></div>`);
 const lb = $("#lb");
 function openLB(p){ lb.querySelector("img").src = p.photo; lb.querySelector(".cap").textContent = p.name + (p.size ? " · " + p.size : ""); lb.classList.add("open"); document.body.style.overflow = "hidden"; }
 function closeLB(){ lb.classList.remove("open"); document.body.style.overflow = ""; }
-document.querySelectorAll(".th[data-lb]").forEach(t => t.addEventListener("click", () => { const p = PRODUCTS.find(x => x.id === t.dataset.lb); if (p) openLB(p); }));
 lb.addEventListener("click", closeLB);
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeLB(); });
-recalc();
+renderList(); restore();
+if (DELIVERED) setMode(MODE); else recalc();
 </script>
 </body>
 </html>
