@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Wolfpak Power Buys</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KL37H24170"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KL37H24170');function pbev(n,p){try{gtag('event',n,p||{});}catch(e){}}</script>
+
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
 :root{
@@ -296,6 +299,7 @@ form.addEventListener("submit", async e => {
     if (!res.ok) throw new Error(res.status);
     $("#doneText").textContent = `${t.brands} brand${t.brands===1?"":"s"}, ${t.cases} cases, estimated ${money(t.total)} before freight.`;
     try { localStorage.removeItem(CART_KEY); } catch(e){}
+    pbev("order_sent", {brands: t.brands, cases: t.cases, value: Math.round(t.total), currency: "USD"});
     form.hidden = true; $("#done").hidden = false; $("#done").scrollIntoView({behavior:"smooth"});
     document.querySelectorAll(".card .incart").forEach(t => t.hidden = true);
   } catch (x) {
