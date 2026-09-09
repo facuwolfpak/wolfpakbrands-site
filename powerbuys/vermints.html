@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Power Buys · VerMints</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KL37H24170"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KL37H24170');function pbev(n,p){try{gtag('event',n,p||{});}catch(e){}}</script>
+
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
 :root{
@@ -221,6 +224,7 @@ const CART_KEY = "wpcart";
 function loadCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || "{}") || {}; } catch(e){ return {}; } }
 function cartTotals(){ const c = loadCart(); let cases=0,total=0,brands=0; for (const k in c){ if (c[k].cases){ brands++; cases+=c[k].cases; total+=c[k].total; } } return {cases,total,brands}; }
 function saveCart(cases, units, total, pallets, x){
+  if (cases && cases !== window.__pbLastCases) pbev("add_cases", {brand: BRAND, cases, value: Math.round(total), fulfillment: MODE}); window.__pbLastCases = cases;
   let c = loadCart();
   const lines = PRODUCTS.filter(p => qtyOf(p) > 0).map(p => ({id:p.id, name:p.name, section:p.section||"", size:p.size, pack:p.pack, mpn:p.mpn||"", upc:p.upc||"", price:p.price, show:show(p), qty:qtyOf(p), perPallet:p.perPallet||0, ti:p.ti||0, kg:p.caseKg||0}));
   if (lines.length) c[BRAND_KEY] = {name:BRAND, path:location.pathname, incoterm:termLabel(), fulfillment:MODE, discount:DISCOUNT, minimum:minText(), minPallets:minPal(), minDollars:MIN_DOLLARS, cases, units, total, pallets, layers:x.layers, kg:x.kg, positions:x.positions, tallest:x.tallest, lines, at:Date.now()};
@@ -245,10 +249,11 @@ function setMode(m){
   const n = $("#fnote"); if (n) n.textContent = (m === "delivered" ? "Delivered prices include freight to your consolidator or forwarder in the US; confirm the delivery address in the notes when you send the order." : "Pick up prices: your carrier collects at the brand's warehouse.") + (DEL_MIN_PALLETS !== MIN_PALLETS ? " Minimum " + minPal() + " pallet" + (minPal()===1?"":"s") + " for this option." : "");
   const q = {}; PRODUCTS.forEach(p => q[p.id] = qtyOf(p)); renderList(); PRODUCTS.forEach(p => $("#q-" + p.id).value = q[p.id] || 0); recalc();
 }
-document.querySelectorAll("#fulfil .seg button").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+document.querySelectorAll("#fulfil .seg button").forEach(b => b.addEventListener("click", () => { pbev("fulfillment_toggle", {brand: BRAND, mode: b.dataset.mode}); setMode(b.dataset.mode); }));
+document.querySelectorAll(".sheets a").forEach(a => a.addEventListener("click", () => pbev("sell_sheet_click", {brand: BRAND, file: a.textContent.trim()})));
 document.body.insertAdjacentHTML("beforeend", `<div class="lb" id="lb" role="dialog" aria-label="Product photo"><button class="x" aria-label="Close">×</button><img alt=""><div class="cap"></div></div>`);
 const lb = $("#lb");
-function openLB(p){ lb.querySelector("img").src = p.photo; lb.querySelector(".cap").textContent = p.name + (p.size ? " · " + p.size : ""); lb.classList.add("open"); document.body.style.overflow = "hidden"; }
+function openLB(p){ pbev("photo_zoom", {brand: BRAND, item: p.name}); lb.querySelector("img").src = p.photo; lb.querySelector(".cap").textContent = p.name + (p.size ? " · " + p.size : ""); lb.classList.add("open"); document.body.style.overflow = "hidden"; }
 function closeLB(){ lb.classList.remove("open"); document.body.style.overflow = ""; }
 lb.addEventListener("click", closeLB);
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeLB(); });
