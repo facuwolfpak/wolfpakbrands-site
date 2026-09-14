@@ -227,7 +227,7 @@ main.wrap{max-width:1040px}
     </a></div>
 
   <form class="form" id="order" method="POST" action="https://formspree.io/f/xkjnqqjl">
-    <input type="hidden" name="_subject" id="subj" value="Power buy order">
+    <input type="hidden" name="_subject" id="subj" value="Power buy inquiry">
     <input type="hidden" name="_captcha" value="false">
     <input type="hidden" name="brands" id="brandsField" value="">
     <input type="hidden" name="order_lines" id="orderLines" value="">
@@ -254,11 +254,11 @@ main.wrap{max-width:1040px}
     <label for="notes">Notes (delivery port, consolidator, other items)</label><textarea id="notes" name="notes" rows="2"></textarea>
 
     <div class="err" id="err"></div>
-    <button class="btn primary" type="submit" id="sendBtn">Send order</button>
+    <button class="btn primary" type="submit" id="sendBtn">Send inquiry</button>
     <div class="hint" style="margin:12px 0 0">Questions? <a href="mailto:facu@wolfpakbrands.com" style="color:inherit">facu@wolfpakbrands.com</a></div>
   </form>
   <div class="form done" id="done" hidden>
-    <h2>Order received</h2>
+    <h2>Inquiry received</h2>
     <p id="doneText"></p>
     <p class="hint">Thank you. The Wolfpak team will confirm availability, pallet build and freight within 24 hours at the email you gave us.</p>
   </div>
@@ -322,9 +322,9 @@ form.addEventListener("submit", async e => {
   e.preventDefault();
   const err = $("#err"); err.style.display = "none";
   const t = render();
-  if (!t.cases){ err.textContent = "Your order is empty. Open a brand above and add some cases first."; err.style.display = "block"; return; }
+  if (!t.cases){ err.textContent = "Your inquiry is empty. Open a brand above and add some cases first."; err.style.display = "block"; return; }
   if (!form.reportValidity()) return;
-  $("#subj").value = `Power buy order – ${$("#company").value.trim()} – ${t.brands} brand${t.brands===1?"":"s"}, ${t.cases} cases`;
+  $("#subj").value = `Power buy inquiry – ${$("#company").value.trim()} – ${t.brands} brand${t.brands===1?"":"s"}, ${t.cases} cases`;
   const btn = $("#sendBtn"); btn.disabled = true; btn.textContent = "Sending…";
   try {
     const res = await fetch(form.action, { method: "POST", headers: { "Accept": "application/json" }, body: new FormData(form) });
@@ -335,8 +335,8 @@ form.addEventListener("submit", async e => {
     form.hidden = true; $("#done").hidden = false; $("#done").scrollIntoView({behavior:"smooth"});
     document.querySelectorAll(".card .incart").forEach(t => t.hidden = true);
   } catch (x) {
-    err.textContent = "Something went wrong sending the order. Please try again or email facu@wolfpakbrands.com."; err.style.display = "block";
-    btn.disabled = false; btn.textContent = "Send order";
+    err.textContent = "Something went wrong sending the inquiry. Please try again or email facu@wolfpakbrands.com."; err.style.display = "block";
+    btn.disabled = false; btn.textContent = "Send inquiry";
   }
 });
 </script>
