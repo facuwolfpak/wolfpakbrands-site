@@ -132,7 +132,9 @@ main.wrap{max-width:1040px}
 }
 @keyframes railup{from{transform:translateY(0)}to{transform:translateY(-50%)}}
 @keyframes raildown{from{transform:translateY(-50%)}to{transform:translateY(0)}}
-@media (prefers-reduced-motion:reduce){.rail .track{animation:none}.rail{overflow-y:auto}}
+.rail{scrollbar-width:none;-ms-overflow-style:none}
+.rail::-webkit-scrollbar{display:none;width:0;height:0}
+@media (prefers-reduced-motion:reduce){.rail .track{animation-duration:240s}}
 .wrap>*:not(.grid):not(.hero){max-width:640px;margin-left:auto;margin-right:auto}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
 .card{display:grid;grid-template-rows:150px 1fr;background:var(--card);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:inherit;overflow:hidden}
